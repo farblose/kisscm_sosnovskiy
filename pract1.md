@@ -9,6 +9,7 @@
 ![image](https://github.com/user-attachments/assets/006fa9d0-56e2-41d0-8a26-e26db1b4aeff)
 ## Задание 3
 Ответ:
+```
 #!/bin/sh
 
 text=$*
@@ -23,5 +24,5 @@ done
 echo "+${line}+"
 echo "| ${text} |"
 echo "+${line}+" 
-
+```
 ![image](https://github.com/user-attachments/assets/07ca0f82-e4a7-4146-aaed-1c8bfae80562)
