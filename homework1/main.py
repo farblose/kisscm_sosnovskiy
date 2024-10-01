@@ -16,13 +16,20 @@ class VShell:
         else:
             raise ValueError("Unsupported archive format")
         
+    def ls(self, args):
+        for file in self.file_system:
+            if (file.endswith("/") and file.count("/") == 1) or file.count("/") == 0:
+                print(file)
+        
     def run_command(self, command):
         parts = command.split()
         if not parts:
             return
         cmd, args = parts[0], parts[1:]
 
-        if cmd == "exit":
+        if cmd == "ls":
+            self.ls(args)
+        elif cmd == "exit":
             sys.exit(0)
         else:
             print(f"vshell: {cmd}: Command not found")
