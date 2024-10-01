@@ -1,5 +1,6 @@
 import zipfile
 import argparse
+import sys
 
 class VShell:
     def __init__(self, archive_path):
@@ -16,7 +17,15 @@ class VShell:
             raise ValueError("Unsupported archive format")
         
     def run_command(self, command):
-        pass
+        parts = command.split()
+        if not parts:
+            return
+        cmd, args = parts[0], parts[1:]
+
+        if cmd == "exit":
+            sys.exit(0)
+        else:
+            print(f"vshell: {cmd}: Command not found")
         
 
 def main():
