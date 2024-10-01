@@ -12,14 +12,46 @@ class VShell:
     def load_archive(self, path):
         if path.endswith(".zip"):
             with zipfile.ZipFile(path) as zip:
-                return ["/".join(file.split("/")[1:]) for file in zip.namelist() if "/".join(file.split("/")[1:]) != ""]
+                return ["/" + "/".join(file.split("/")[1:]) for file in zip.namelist()]
         else:
             raise ValueError("Unsupported archive format")
         
     def ls(self, args):
-        for file in self.file_system:
-            if (file.endswith("/") and file.count("/") == 1) or file.count("/") == 0:
-                print(file)
+        files = [f.replace(self.current_dir, "", 1) for f in self.file_system if f.startswith(self.current_dir) and f != self.current_dir]
+        for file in files:
+                if (file.count("/") == 1 and file.endswith("/")) or file.count("/") == 0:
+                    print(file)
+
+    def cd(self, args):
+        if len(args) == 0:
+            self.previous_dir = self.current_dir
+            self.current_dir = "/"
+        else:
+            if not args[0].endswith("/"):
+                args[0] += "/"
+            if args[0] == "/":
+                self.previous_dir = self.current_dir
+                self.current_dir = "/"
+            elif args[0].count("..") != 0:
+                directories = self.current_dir[:-1].split("/")
+                if self.current_dir == "/":
+                    pass
+                elif args[0].count("..") > len(directories) - 1:
+                    self.previous_dir = self.current_dir
+                    self.current_dir = "/"
+                else:
+                    self.previous_dir = self.current_dir
+                    self.current_dir = "/".join(directories[:-args[0].count("..")]) + "/"
+            elif args[0] == "-/":
+                self.current_dir, self.previous_dir = self.previous_dir, self.current_dir
+            elif any(f.startswith(self.current_dir + args[0]) for f in self.file_system):
+                self.previous_dir = self.current_dir
+                self.current_dir = self.current_dir + args[0]
+            elif any(f.startswith(args[0]) for f in self.file_system):
+                self.previous_dir = self.current_dir
+                self.current_dir = args[0]
+            else:
+                print(f"cd: {args[0]}: No such directory")
         
     def run_command(self, command):
         parts = command.split()
@@ -29,6 +61,8 @@ class VShell:
 
         if cmd == "ls":
             self.ls(args)
+        elif cmd == "cd":
+            self.cd(args)
         elif cmd == "exit":
             sys.exit(0)
         else:
