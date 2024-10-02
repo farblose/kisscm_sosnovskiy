@@ -2,6 +2,20 @@ import zipfile
 import argparse
 import sys
 
+def print_tree(directory_dict, root, prefix=""):
+    items = directory_dict.get(root, [])
+    files = [item for item in items if item not in directory_dict]
+    dirs = [item for item in items if item in directory_dict]
+
+    for i, file in enumerate(files):
+        connector = "└── " if i == len(files) - 1 and not dirs else "├── "
+        print(prefix + connector + file)
+
+    for i, dir in enumerate(dirs):
+        connector = "└── " if i == len(dirs) - 1 else "├── "
+        print(prefix + connector + dir)
+        print_tree(directory_dict, dir, prefix + ("    " if connector == "└── " else "│   "))
+
 class VShell:
     def __init__(self, archive_path):
         self.current_dir = "/"
@@ -68,7 +82,11 @@ class VShell:
                     files_sorted["/"] = [file]
                 else:
                     files_sorted["/"].append(file)
-        print(files_sorted)
+        print(".")
+        print_tree(files_sorted, "/")
+        total_dirs = len(files_sorted.keys()) - 1
+        total_files = len(files) - total_dirs
+        print(f"{total_dirs} directories, {total_files} files")
         
     def run_command(self, command):
         parts = command.split()
