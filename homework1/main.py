@@ -52,6 +52,23 @@ class VShell:
                 self.current_dir = args[0]
             else:
                 print(f"cd: {args[0]}: No such directory")
+    
+    def tree(self, args):
+        files = [f.replace(self.current_dir, "", 1) if not f.replace(self.current_dir, "", 1).endswith("/") else f.replace(self.current_dir, "", 1)[:-1] for f in self.file_system if f.startswith(self.current_dir) and f != self.current_dir]
+        files_sorted = {}
+        for file in files:
+            if len(file.split("/")) != 1:
+                file_split = file.split("/")
+                if file_split[-2] not in files_sorted.keys():
+                    files_sorted[file_split[-2]] = [file_split[-1]]
+                else:
+                    files_sorted[file_split[-2]].append(file_split[-1])
+            else:
+                if "/" not in files_sorted.keys():
+                    files_sorted["/"] = [file]
+                else:
+                    files_sorted["/"].append(file)
+        print(files_sorted)
         
     def run_command(self, command):
         parts = command.split()
@@ -63,6 +80,8 @@ class VShell:
             self.ls(args)
         elif cmd == "cd":
             self.cd(args)
+        elif cmd == "tree":
+            self.tree(args)
         elif cmd == "exit":
             sys.exit(0)
         else:
