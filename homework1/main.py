@@ -117,10 +117,10 @@ class VShell:
         if source == destination:
             return
         if source.endswith("/") and not destination.endswith("/"):
-            print("Cant move directory to file")
+            print("mv: Cant move directory to file")
             return
         if source in destination:
-            print(f"Cannot move a directory {source} into itself")
+            print(f"mv: Cannot move a directory {source} into itself")
             return
         shutil.unpack_archive(self.archive_path, "buffer")
         source = f"buffer/{self.parent_dir}" + source
@@ -167,6 +167,51 @@ def main():
         except EOFError:
             break
 
+def test_vshell():
+    shutil.make_archive("filesystem", format="zip", root_dir="test_filesystem")
+
+    shell = VShell("filesystem.zip")
+
+    shell.ls([])
+    print("expect /test main.py\n")
+
+    shell.tree([])
+    print()
+
+    shell.cd(["test"])
+
+    shell.ls([])
+    print("expect /folder kalich.txt\n")
+
+    shell.tree([])
+    print()
+
+    shell.cd(["folder"])
+
+    shell.ls([])
+    print("expect cppcpp.cpp\n")
+
+    shell.tree([])
+    print()
+
+    shell.cd([".."])
+    shell.mv(["kalich.txt", "/"])
+    shell.cd([])
+    shell.ls([])
+    print("expect /test kalich.txt main.py\n")
+
+    shell.cd(["folder"])
+    print("expect cd: folder/: No such directory\n")
+
+    shell.mv(["test", "test/folder"])
+    print("expect mv: Cannot move a directory /test/ into itself\n")
+
+    shell.mv(["test", "main.py"])
+    print("expect mv: Cant move directory to file")
+
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "--test":
+        test_vshell()
+    else:
+        main()
