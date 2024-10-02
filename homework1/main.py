@@ -87,6 +87,35 @@ class VShell:
         total_dirs = len(files_sorted.keys()) - 1
         total_files = len(files) - total_dirs
         print(f"{total_dirs} directories, {total_files} files")
+
+    def mv(self, args):
+        if len(args) != 2:
+            print("Usage: mv [source] [destination]")
+            return
+        source = args[0]
+        destination = args[1]
+        if not source.startswith("/"):
+            source = self.current_dir + source
+        if not destination.startswith("/"):
+            destination = self.current_dir + destination
+        if source == "/":
+            print("mv: Cant move / directory")
+            return
+        if source not in self.file_system and source + "/" not in self.file_system:
+            print(f"mv: {source}: No such file or directory")
+            return
+        if destination not in self.file_system and destination + "/" not in self.file_system:
+            print(f"mv: {destination}: No such file or directory")
+            return
+        if source not in self.file_system:
+            source += "/"
+        if destination not in self.file_system:
+            destination += "/"
+        if source == destination:
+            return
+        if source.endswith("/") and not destination.endswith("/"):
+            print("Cant move directory to file")
+            return
         
     def run_command(self, command):
         parts = command.split()
@@ -100,6 +129,8 @@ class VShell:
             self.cd(args)
         elif cmd == "tree":
             self.tree(args)
+        elif cmd == "mv":
+            self.mv(args)
         elif cmd == "exit":
             sys.exit(0)
         else:
