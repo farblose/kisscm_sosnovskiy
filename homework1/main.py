@@ -1,6 +1,8 @@
 import zipfile
 import argparse
 import sys
+import shutil
+import os
 
 def print_tree(directory_dict, root, prefix=""):
     items = directory_dict.get(root, [])
@@ -26,6 +28,7 @@ class VShell:
     def load_archive(self, path):
         if path.endswith(".zip"):
             with zipfile.ZipFile(path) as zip:
+                self.parent_dir = zip.namelist()[0].split("/")[0]
                 return ["/" + "/".join(file.split("/")[1:]) for file in zip.namelist()]
         else:
             raise ValueError("Unsupported archive format")
@@ -116,6 +119,17 @@ class VShell:
         if source.endswith("/") and not destination.endswith("/"):
             print("Cant move directory to file")
             return
+        if source in destination:
+            print(f"Cannot move a directory {source} into itself")
+            return
+        shutil.unpack_archive(self.archive_path, "buffer")
+        source = f"buffer/{self.parent_dir}" + source
+        destination = f"buffer/{self.parent_dir}" + destination
+        shutil.move(os.path.abspath(source), os.path.abspath(destination))
+        os.remove(self.archive_path)
+        shutil.make_archive(self.archive_path.replace(".zip", "", 1), format="zip", root_dir="buffer")
+        shutil.rmtree("buffer")
+        self.file_system = self.load_archive(self.archive_path)
         
     def run_command(self, command):
         parts = command.split()
