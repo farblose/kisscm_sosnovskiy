@@ -3,6 +3,7 @@ import argparse
 import sys
 import shutil
 import os
+import pytest
 
 def print_tree(directory_dict, root, prefix=""):
     items = directory_dict.get(root, [])
@@ -35,9 +36,12 @@ class VShell:
         
     def ls(self, args):
         files = [f.replace(self.current_dir, "", 1) for f in self.file_system if f.startswith(self.current_dir) and f != self.current_dir]
+        out = []
         for file in files:
                 if (file.count("/") == 1 and file.endswith("/")) or file.count("/") == 0:
                     print(file)
+                    out.append(file)
+        return out
 
     def cd(self, args):
         if len(args) == 0:
@@ -69,6 +73,7 @@ class VShell:
                 self.current_dir = args[0]
             else:
                 print(f"cd: {args[0]}: No such directory")
+                return f"cd: {args[0]}: No such directory"
     
     def tree(self, args):
         files = [f.replace(self.current_dir, "", 1) if not f.replace(self.current_dir, "", 1).endswith("/") else f.replace(self.current_dir, "", 1)[:-1] for f in self.file_system if f.startswith(self.current_dir) and f != self.current_dir]
@@ -90,11 +95,12 @@ class VShell:
         total_dirs = len(files_sorted.keys()) - 1
         total_files = len(files) - total_dirs
         print(f"{total_dirs} directories, {total_files} files")
+        return f"{total_dirs} directories, {total_files} files"
 
     def mv(self, args):
         if len(args) != 2:
             print("Usage: mv [source] [destination]")
-            return
+            return "Usage: mv [source] [destination]"
         source = args[0]
         destination = args[1]
         if not source.startswith("/"):
@@ -103,13 +109,13 @@ class VShell:
             destination = self.current_dir + destination
         if source == "/":
             print("mv: Cant move / directory")
-            return
+            return "mv: Cant move / directory"
         if source not in self.file_system and source + "/" not in self.file_system:
             print(f"mv: {source}: No such file or directory")
-            return
+            return f"mv: {source}: No such file or directory"
         if destination not in self.file_system and destination + "/" not in self.file_system:
             print(f"mv: {destination}: No such file or directory")
-            return
+            return f"mv: {destination}: No such file or directory"
         if source not in self.file_system:
             source += "/"
         if destination not in self.file_system:
@@ -118,10 +124,10 @@ class VShell:
             return
         if source.endswith("/") and not destination.endswith("/"):
             print("mv: Cant move directory to file")
-            return
+            return "mv: Cant move directory to file"
         if source in destination:
             print(f"mv: Cannot move a directory {source} into itself")
-            return
+            return f"mv: Cannot move a directory {source} into itself"
         shutil.unpack_archive(self.archive_path, "buffer")
         source = f"buffer/{self.parent_dir}" + source
         destination = f"buffer/{self.parent_dir}" + destination
@@ -167,51 +173,70 @@ def main():
         except EOFError:
             break
 
-def test_vshell():
+def test_ls():
     shutil.make_archive("filesystem", format="zip", root_dir="test_filesystem")
-
     shell = VShell("filesystem.zip")
+    out = shell.ls([])
+    assert out == ["test/", "main.py"]
 
-    shell.ls([])
-    print("expect /test main.py\n")
-
-    shell.tree([])
-    print()
-
+def test_ls_and_cd():
+    shutil.make_archive("filesystem", format="zip", root_dir="test_filesystem")
+    shell = VShell("filesystem.zip")
     shell.cd(["test"])
+    out = shell.ls([])
+    assert out == ["folder/", "kalich.txt"]
 
-    shell.ls([])
-    print("expect /folder kalich.txt\n")
+def test_cd():
+    shutil.make_archive("filesystem", format="zip", root_dir="test_filesystem")
+    shell = VShell("filesystem.zip")
+    shell.cd(["test"])
+    assert shell.current_dir == "/test/"
 
-    shell.tree([])
-    print()
+def test_cd_error():
+    shutil.make_archive("filesystem", format="zip", root_dir="test_filesystem")
+    shell = VShell("filesystem.zip")
+    out = shell.cd(["folder"])
+    assert out == "cd: folder/: No such directory"
 
-    shell.cd(["folder"])
+def test_mv_no_args():
+    shutil.make_archive("filesystem", format="zip", root_dir="test_filesystem")
+    shell = VShell("filesystem.zip")
+    out = shell.mv([])
+    assert out == "Usage: mv [source] [destination]"
 
-    shell.ls([])
-    print("expect cppcpp.cpp\n")
+def test_mv_error():
+    shutil.make_archive("filesystem", format="zip", root_dir="test_filesystem")
+    shell = VShell("filesystem.zip")
+    out = shell.mv(["/", "/test/"])
+    assert out == "mv: Cant move / directory"
 
-    shell.tree([])
-    print()
+def test_mv():
+    shutil.make_archive("filesystem", format="zip", root_dir="test_filesystem")
+    shell = VShell("filesystem.zip")
+    shell.mv(["main.py", "/test/"])
+    shell.cd(["test"])
+    out = shell.ls([])
+    assert out == ["folder/", "kalich.txt", "main.py"]
 
-    shell.cd([".."])
-    shell.mv(["kalich.txt", "/"])
-    shell.cd([])
-    shell.ls([])
-    print("expect /test kalich.txt main.py\n")
+def test_tree():
+    shutil.make_archive("filesystem", format="zip", root_dir="test_filesystem")
+    shell = VShell("filesystem.zip")
+    out = shell.tree([])
+    assert out == "2 directories, 3 files"
 
-    shell.cd(["folder"])
-    print("expect cd: folder/: No such directory\n")
+def test_tree_2():
+    shutil.make_archive("filesystem", format="zip", root_dir="test_filesystem")
+    shell = VShell("filesystem.zip")
+    shell.cd(["test"])
+    out = shell.tree([])
+    assert out == "1 directories, 2 files"
 
-    shell.mv(["test", "test/folder"])
-    print("expect mv: Cannot move a directory /test/ into itself\n")
-
-    shell.mv(["test", "main.py"])
-    print("expect mv: Cant move directory to file")
-
+def test_tree_3():
+    shutil.make_archive("filesystem", format="zip", root_dir="test_filesystem")
+    shell = VShell("filesystem.zip")
+    shell.cd(["test/folder"])
+    out = shell.tree([])
+    assert out == "0 directories, 1 files"
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "--test":
-        test_vshell()
-    else:
         main()
