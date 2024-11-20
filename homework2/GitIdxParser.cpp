@@ -1,11 +1,13 @@
 #include "GitIdxParser.hpp"
 #include "GitPackParser.hpp"
+#include <cstdio>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
-int find_unix_timestamp(const std::string& data)
+int GitIdxParser::find_unix_timestamp(const std::string& data)
 {
     std::string unixTimestamp;
     for (const char& sym : data)
@@ -139,10 +141,11 @@ void GitIdxParser::printEntries(bool verbose) const {
     std::cout << "Всего объектов: " << entries.size() << std::endl;
 }
 
-void GitIdxParser::extractObjects(const std::string& packFilePath, const int& from) {
+void GitIdxParser::extractCommitsToPuml(const std::string& packFilePath, const int& from, const std::string& outputDir) {
     try {
         GitPackParser packParser(packFilePath);
-        std::ofstream output("commits.puml");
+        pumlFile = outputDir + "commits.puml";
+        std::ofstream output(outputDir + "commits.puml");
         output << "@startuml\ndigraph dependencies {\n";
         for (const auto& entry : entries) {
             try {
@@ -173,4 +176,28 @@ void GitIdxParser::extractObjects(const std::string& packFilePath, const int& fr
     } catch (const std::exception& e) {
         std::cerr << "Ошибка при работе с pack файлом: " << e.what() << std::endl;
     }
+}
+
+std::string GitIdxParser::convertPumlToPng(const std::string& plantUmlJarPath)
+{
+    if (!std::filesystem::exists(pumlFile)) {
+        throw std::runtime_error("Файл " + pumlFile + " не найден.");
+    }
+
+    if (!std::filesystem::exists(plantUmlJarPath)) {
+        throw std::runtime_error("Файл " + plantUmlJarPath + " не найден.");
+    }
+
+    std::string command = "java -jar " + plantUmlJarPath + " -tpng " + pumlFile;
+    int result = std::system(command.c_str());
+    if (result != 0) {
+        throw std::runtime_error("Ошибка при выполнении PlantUML: команда завершилась с кодом " + std::to_string(result));
+    }
+
+    std::string output_file = std::filesystem::path(pumlFile).parent_path().string() + "/" + std::filesystem::path(pumlFile).stem().string() + ".png";
+    if (!std::filesystem::exists(output_file)) {
+        throw std::runtime_error("Не удалось создать PNG файл.");
+    }
+
+    return output_file;
 }

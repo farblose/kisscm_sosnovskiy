@@ -1,19 +1,29 @@
 #include <iostream>
 #include <filesystem>
 #include "GitIdxParser.hpp"
+#include "inicpp.hpp"
 
-int main(int argc, char* argv[])
+int main()
 {
-    if (argc != 2) {
-        std::cerr << "Использование: " << argv[0]
-                  << " <путь к репозиторию>\n";
-        return 1;
-    }
-
     std::string IdxFilePath, PackFilePath;
 
-    for (const auto & entry : std::filesystem::directory_iterator(std::string(argv[1]) + "/.git/objects/pack"))
+    if (!std::filesystem::exists("config.ini"))
     {
+        std::cerr << "Отсутствует конфигурационный файл!\n";
+        return -1;
+    }
+
+    inicpp::IniManager ini("config.ini");
+
+    if (!ini["options"].isKeyExist("plantuml_jar_path") || !ini["options"].isKeyExist("repo_path") || !ini["options"].isKeyExist("output_path") || !ini["options"].isKeyExist("date"))
+    {
+        std::cerr << "Ошибка в конфигурационном файле!\n";
+        return -1;
+    }
+
+    for (const auto & entry : std::filesystem::directory_iterator(ini["options"]["repo_path"] + ".git/objects/pack"))
+    {
+        std::cout << "kal";
         if (entry.path().extension() == ".idx")
             IdxFilePath = std::filesystem::absolute(entry.path());
 
@@ -24,7 +34,9 @@ int main(int argc, char* argv[])
     try {
         GitIdxParser parser;
         if (parser.parseFile(IdxFilePath)) {
-            parser.extractObjects(PackFilePath, 0);
+            parser.extractCommitsToPuml(PackFilePath, ini["options"].toInt("date"), ini["options"]["output_path"]);
+            std::string outputFile = parser.convertPumlToPng(ini["options"]["plantuml_jar_path"]);
+            std::cout << "PNG файл успешно создан: " << outputFile << "\n";
         }
     } catch (const std::exception& e) {
         std::cerr << "Ошибка: " << e.what() << std::endl;
