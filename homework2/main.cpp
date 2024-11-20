@@ -1,5 +1,6 @@
 #include <iostream>
 #include <filesystem>
+#include "GitIdxParser.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -15,6 +16,16 @@ int main(int argc, char* argv[])
     {
         if (entry.path().extension() == ".idx")
             IdxFilePath = std::filesystem::absolute(entry.path());
+    }
+
+    try {
+        GitIdxParser parser;
+        if (parser.parseFile(IdxFilePath)) {
+            parser.printEntries(true);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Ошибка: " << e.what() << std::endl;
+        return 1;
     }
 
     return 0;
