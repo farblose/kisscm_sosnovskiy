@@ -26,7 +26,7 @@ class GitIdxParser {
 
         void printEntries(bool verbose = false) const;
 
-        void extractObjects(const std::string& packFilePath);
+        void extractObjects(const std::string& packFilePath, const int& from);
 };
 
 #endif

@@ -5,6 +5,24 @@
 #include <iostream>
 #include <fstream>
 
+int find_unix_timestamp(const std::string& data)
+{
+    std::string unixTimestamp;
+    for (const char& sym : data)
+    {
+        if (48 <= sym && sym <= 57)
+            unixTimestamp += sym;
+        else
+        {
+            if (unixTimestamp.length() == 10)
+                return std::stoi(unixTimestamp);
+            else
+                unixTimestamp = "";
+        }
+    }
+    return -1;
+}
+
 std::string GitIdxParser::bytesToHex(const unsigned char* bytes, size_t length) {
     std::stringstream ss;
     for (size_t i = 0; i < length; i++) {
@@ -121,31 +139,37 @@ void GitIdxParser::printEntries(bool verbose) const {
     std::cout << "Всего объектов: " << entries.size() << std::endl;
 }
 
-void GitIdxParser::extractObjects(const std::string& packFilePath) {
+void GitIdxParser::extractObjects(const std::string& packFilePath, const int& from) {
     try {
         GitPackParser packParser(packFilePath);
-
+        std::ofstream output("commits.puml");
+        output << "@startuml\ndigraph dependencies {\n";
         for (const auto& entry : entries) {
             try {
                 auto [type, content] = packParser.getObjectContent(entry.offset);
                 if (GitPackParser::objectTypeToString(type) == "commit") {
-                    std::cout << "Обработка объекта " << entry.sha1 << std::endl;
-                    std::cout << "  Тип: " << GitPackParser::objectTypeToString(type)
-                             << "\n  Размер: " << content.size() << " байт\n";
-
-                    // Для текстовых объектов (commit, tag) выводим содержимое
-                    if (type == GitObjectType::COMMIT || type == GitObjectType::TAG) {
-                        std::string textContent(content.begin(), content.end());
-                        std::cout << "  Содержимое:\n" << textContent << std::endl;
-                        std::cout << "  Время: " << textContent.substr(textContent.find_last_of('>')+2, 10) << "\n";
+                    std::string textContent(content.begin(), content.end());
+                    int time = find_unix_timestamp(textContent);
+                    if (!time)
+                    {
+                        std::cerr << "no unix timestamp\n";
                     }
-
-                    std::cout << "-------------------\n\n";
+                    if (time >= from)
+                    {
+                        std::string parent = textContent.substr(textContent.find("parent") + 7, 40);
+                        if (parent.back() == '\n')
+                            parent.pop_back();
+                        std::cout << "{\"hash\": \"" << entry.sha1 << "\", \"parent\": \"" << parent << "\"}\n";
+                        //plantuml_code += f'  "{parent}" -> "{commit["hash"]}";\n'
+                        output << "  \"" << entry.sha1 << "\";\n  \"" << parent << "\" -> \"" << entry.sha1 << "\";\n";
+                    }
                 }
             } catch (const std::exception& e) {
-                std::cerr << "Ошибка при обработке объекта: " << e.what() << std::endl;
+
             }
         }
+        output << "}\n@enduml";
+        output.close();
     } catch (const std::exception& e) {
         std::cerr << "Ошибка при работе с pack файлом: " << e.what() << std::endl;
     }

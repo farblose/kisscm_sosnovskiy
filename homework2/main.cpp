@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     try {
         GitIdxParser parser;
         if (parser.parseFile(IdxFilePath)) {
-            parser.extractObjects(PackFilePath);
+            parser.extractObjects(PackFilePath, 0);
         }
     } catch (const std::exception& e) {
         std::cerr << "Ошибка: " << e.what() << std::endl;
