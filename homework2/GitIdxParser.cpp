@@ -133,14 +133,14 @@ void GitIdxParser::extractObjects(const std::string& packFilePath) {
                     std::cout << "  Тип: " << GitPackParser::objectTypeToString(type)
                              << "\n  Размер: " << content.size() << " байт\n";
 
-                // Для текстовых объектов (commit, tag) выводим содержимое
-                if (type == GitObjectType::COMMIT || type == GitObjectType::TAG) {
-                    std::string textContent(content.begin(), content.end());
-                    std::cout << "  Содержимое:\n" << textContent << std::endl;
-                    std::cout << textContent.substr(textContent.find_last_of('>')+2, 10) << "\n";
-                }
+                    // Для текстовых объектов (commit, tag) выводим содержимое
+                    if (type == GitObjectType::COMMIT || type == GitObjectType::TAG) {
+                        std::string textContent(content.begin(), content.end());
+                        std::cout << "  Содержимое:\n" << textContent << std::endl;
+                        std::cout << textContent.substr(textContent.find_last_of('>')+2, 10) << "\n";
+                    }
 
-                std::cout << "-------------------\n";
+                    std::cout << "-------------------\n";
                 }
             } catch (const std::exception& e) {
                 std::cerr << "Ошибка при обработке объекта: " << e.what() << std::endl;
