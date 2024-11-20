@@ -22,7 +22,7 @@ bool GitIdxParser::parseFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Не удалось открыть файл: " << filename << std::endl;
-        return false
+        return false;
     }
 
     // Читаем и проверяем заголовок
