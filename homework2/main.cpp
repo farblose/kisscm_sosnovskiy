@@ -23,7 +23,6 @@ int main()
 
     for (const auto & entry : std::filesystem::directory_iterator(ini["options"]["repo_path"] + ".git/objects/pack"))
     {
-        std::cout << "kal";
         if (entry.path().extension() == ".idx")
             IdxFilePath = std::filesystem::absolute(entry.path());
 
