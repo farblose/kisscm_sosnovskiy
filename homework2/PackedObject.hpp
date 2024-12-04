@@ -1,7 +1,6 @@
 #include <vector>
 #include <cstdint>
 #include <string>
-#include <ostream>
 
 #ifndef PACKEDOBJECT_HPP
 #define PACKETOBJECT_HPP
