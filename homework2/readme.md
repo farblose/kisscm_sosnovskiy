@@ -13,7 +13,10 @@
 ## Сборка проекта
 ```bash
 git clone https://github.com/farblose/kisscm_sosnovskiy.git && \
-cd kisscm_sosnovskiy/homework2 && \
+cd kisscm_sosnovskiy/homework2
+```
+Далее меняем файл config.ini
+```
 clang++ GitIdxParser.cpp GitPackParser.cpp main.cpp -lz -o a && \
 ./a
 ```
