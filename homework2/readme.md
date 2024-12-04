@@ -17,8 +17,8 @@ cd kisscm_sosnovskiy/homework2
 ```
 Далее меняем файл config.ini
 ```
-clang++ GitIdxParser.cpp GitPackParser.cpp main.cpp -lz -o a && \
-./a
+clang++ GitIdxParser.cpp GitPackParser.cpp main.cpp -lz -o graphviz && \
+./graphviz
 ```
 ## Запуск тестов
 ```bash
