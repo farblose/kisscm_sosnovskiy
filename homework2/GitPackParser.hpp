@@ -13,6 +13,7 @@ private:
     std::ifstream packFile;
     std::string packPath;
 
+public:
     bool readExactly(char* buffer, size_t size);
 
     // Чтение переменной длины числа
@@ -26,7 +27,6 @@ private:
 
     std::vector<uint8_t> applyDelta(const std::vector<uint8_t>& baseData, const std::vector<uint8_t>& deltaData);
 
-public:
     GitPackParser(const std::string& packFilePath);
 
     ~GitPackParser();

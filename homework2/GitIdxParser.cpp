@@ -22,6 +22,10 @@ int GitIdxParser::find_unix_timestamp(const std::string& data)
                 unixTimestamp = "";
         }
     }
+    if (unixTimestamp != "")
+    {
+        return std::stoi(unixTimestamp);
+    }
     return -1;
 }
 

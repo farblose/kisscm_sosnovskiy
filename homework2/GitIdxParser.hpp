@@ -18,14 +18,13 @@ class GitIdxParser {
         };
 
         std::vector<IndexEntry> entries;
-
+    public:
         std::string bytesToHex(const unsigned char* bytes, size_t length);
 
         bool readExactly(std::ifstream& file, char* buffer, size_t size);
 
         int find_unix_timestamp(const std::string& data);
 
-    public:
         bool parseFile(const std::string& filename);
 
         void printEntries(bool verbose = false) const;
