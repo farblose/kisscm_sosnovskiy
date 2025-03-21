@@ -120,3 +120,19 @@ BOOST_AUTO_TEST_CASE(TestReadVariableLengthNumber_Valid) {
 
 BOOST_AUTO_TEST_SUITE_END()
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
